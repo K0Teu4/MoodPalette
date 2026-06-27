@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1"
+>
+
+<title>MoodPalette</title>
+
+<link
+rel="stylesheet"
+href="/static/style.css"
+>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>
+MoodPalette
+</h1>
+
+<textarea
+id="prompt"
+placeholder="меланхоличный осенний вечер"
+></textarea>
+
+
+<div class="controls">
+
+<button
+id="generate"
+>
+Сгенерировать
+</button>
+
+
+<button
+id="copyAll"
+>
+Copy all HEX
+</button>
+
+
+<button
+id="download"
+>
+Download PNG
+</button>
+
+</div>
+
+
+<div
+id="palette"
+class="palette"
+></div>
+
+
+<div
+id="toast"
+class="toast"
+></div>
+
+
+<h3>
+История
+</h3>
+
+
+<div
+id="history"
+class="history"
+></div>
+
+
+</div>
+
+<script
+src="/static/app.js"
+></script>
+
+</body>
+
+</html>

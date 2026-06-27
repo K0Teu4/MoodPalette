@@ -1,0 +1,31 @@
+[build-system]
+
+requires = ["setuptools>=61.0"]
+
+build-backend = "setuptools.build_meta"
+
+
+[project]
+
+name = "moodpalette"
+
+version = "0.1.0"
+
+description = "Local text-to-color palette generator"
+
+readme = "README.md"
+
+requires-python = ">=3.10"
+
+dependencies = [
+
+    "fastapi",
+    "uvicorn",
+    "pillow"
+
+]
+
+
+[project.scripts]
+
+moodpalette = "moodpalette.server:run"
