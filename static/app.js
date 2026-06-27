@@ -33,6 +33,11 @@ document.getElementById(
 "download"
 )
 
+const share=
+document.getElementById(
+"share"
+)
+
 
 button.onclick=
 generate
@@ -42,6 +47,9 @@ copyAllHex
 
 download.onclick=
 downloadPNG
+
+share.onclick=
+shareLink
 
 
 textarea.addEventListener(
@@ -72,6 +80,9 @@ generate()
 
 
 loadHistory()
+
+restoreFromUrl()
+
 
 
 async function generate(){
@@ -107,7 +118,11 @@ body:
 
 JSON.stringify({
 
-text:text
+text:text,
+
+scheme:"default",
+
+creativity:0.5
 
 })
 
@@ -122,9 +137,7 @@ await response.json()
 
 
 renderPalette(
-
 data.palette
-
 )
 
 
@@ -342,7 +355,6 @@ div.onclick=()=>{
 textarea.value=
 item.query
 
-
 renderPalette(
 item.palette
 )
@@ -424,6 +436,88 @@ colors
 )
 
 )
+
+}
+
+
+
+function shareLink(){
+
+const text=
+
+textarea.value.trim()
+
+if(
+!text
+)
+return
+
+
+const params=
+
+new URLSearchParams({
+
+q:text,
+
+s:"default",
+
+c:"0.5"
+
+})
+
+
+const url=
+
+window.location.origin+
+
+"/?"+
+
+params.toString()
+
+
+navigator
+.clipboard
+.writeText(
+url
+)
+
+showToast(
+"Link copied"
+)
+
+}
+
+
+
+function restoreFromUrl(){
+
+const params=
+
+new URLSearchParams(
+
+window.location.search
+
+)
+
+
+const query=
+
+params.get(
+"q"
+)
+
+
+if(
+!query
+)
+return
+
+
+textarea.value=
+query
+
+
+generate()
 
 }
 
