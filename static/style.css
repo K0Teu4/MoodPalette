@@ -171,3 +171,18 @@ transform:none;
 }
 
 }
+
+select{
+
+padding:12px;
+
+border:none;
+
+border-radius:8px;
+
+background:#1A1A1A;
+
+color:white;
+
+cursor:pointer;
+}

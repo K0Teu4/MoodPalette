@@ -1,7 +1,11 @@
 import hashlib
 import json
 from pathlib import Path
-
+from palette import (
+    monochromatic,
+    complementary,
+    triadic
+)
 
 DATA_PATH = Path(
     "data/palettes.jsonl"
@@ -165,6 +169,33 @@ def generate_palette(
 
     chosen=candidates[index]
 
+    base_colors=chosen[
+        "colors"
+    ]
+
+
+    if scheme=="monochromatic":
+
+        colors=monochromatic(
+            base_colors[2]
+        )
+
+    elif scheme=="complementary":
+
+        colors=complementary(
+            base_colors[2]
+        )
+
+    elif scheme=="triadic":
+
+        colors=triadic(
+            base_colors[2]
+        )
+
+    else:
+
+        colors=base_colors
+
 
     return [
 
@@ -176,7 +207,6 @@ def generate_palette(
 
         }
 
-        for color in
-        chosen["colors"]
+        for color in colors
 
     ]
