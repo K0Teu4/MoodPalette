@@ -29,3 +29,12 @@ build/
 
 # Logs
 *.log
+
+# Model cache (sentence-transformers, CLIP)
+data/cache/
+
+# Generated palette exports
+palette.png
+
+# Local history/state
+*.pkl

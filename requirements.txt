@@ -2,3 +2,5 @@ fastapi
 uvicorn
 pillow
 pydantic
+sentence-transformers
+numpy

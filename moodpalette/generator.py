@@ -13,17 +13,17 @@ from palette import (
     triadic
 )
 
+from semantic_search import (
+    generate_semantic_palette,
+    find_similar_palettes
+)
+
 
 def seed_from_text(text):
-
     return int(
-
         hashlib.md5(
-
             text.encode()
-
         ).hexdigest(),
-
         16
     )
 
@@ -33,7 +33,6 @@ def clamp(
     a=0.0,
     b=1.0
 ):
-
     return max(
         a,
         min(
@@ -43,288 +42,107 @@ def clamp(
     )
 
 
-def shift_color(
-    hex_color,
-    shift
+def apply_emotion_shift(
+    palette,
+    text,
+    emotion
 ):
+    """
+    Apply VERY subtle emotion-based HSL shifts.
+    Preserves the original semantic color meaning.
+    """
+    seed = seed_from_text(text)
 
-    hex_color = hex_color.lstrip("#")
+    result = []
 
-    r = int(
-        hex_color[0:2],
-        16
-    )
+    for i, color in enumerate(palette):
+        hex_color = color.lstrip("#")
 
-    g = int(
-        hex_color[2:4],
-        16
-    )
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
 
-    b = int(
-        hex_color[4:6],
-        16
-    )
+        h, l, s = colorsys.rgb_to_hls(r/255, g/255, b/255)
 
-    h,l,s = colorsys.rgb_to_hls(
+        # Very subtle shifts - max 3% to preserve semantic color
+        shift_strength = 0.03
 
-        r/255,
-        g/255,
-        b/255
+        # Warmth: tiny hue shift toward warm
+        if emotion["warmth"] > 0.3:
+            h = (h + 0.02 * emotion["warmth"] * shift_strength) % 1
 
-    )
+        # Darkness: tiny lightness reduction
+        if emotion["darkness"] > 0.3:
+            l = max(0.05, l - 0.03 * emotion["darkness"] * shift_strength)
 
-    h = (
+        # Energy: tiny saturation boost
+        if emotion["energy"] > 0.3:
+            s = min(1.0, s + 0.03 * emotion["energy"] * shift_strength)
 
-        h +
+        # Seed-based micro-variation for uniqueness (very small)
+        micro = ((seed + i * 7) % 100 - 50) / 2000
+        h = (h + micro) % 1
 
-        shift
+        l = clamp(l)
+        s = clamp(s)
 
-    ) % 1
+        nr, ng, nb = colorsys.hls_to_rgb(h, l, s)
+        result.append(
+            f"#{int(nr*255):02X}{int(ng*255):02X}{int(nb*255):02X}"
+        )
 
-    r,g,b = colorsys.hls_to_rgb(
-
-        h,
-        l,
-        s
-
-    )
-
-    return (
-
-        f"#{int(r*255):02X}"
-        f"{int(g*255):02X}"
-        f"{int(b*255):02X}"
-
-    )
+    return result
 
 
 def generate_palette(
-
     text,
-    scheme,
-    creativity
-
+    scheme
 ):
+    """
+    Generate palette using semantic neural search.
 
-    tokens = tokenize(
-        text
+    Pipeline:
+    1. Semantic search: find closest palettes using sentence-transformers
+    2. Apply subtle emotion-based color shifts
+    3. Apply harmony scheme (mono/complementary/triadic)
+    4. Optimize and return
+    """
+
+    # Step 1: Semantic palette generation (always use top 3 for richness)
+    semantic_palette = generate_semantic_palette(text, creativity=0.3)
+
+    # Step 2: Emotion analysis
+    tokens = tokenize(text)
+    emotion = build_emotion_vector(tokens)
+
+    # Step 3: Apply emotion shifts (very subtle, preserves semantic meaning)
+    palette = apply_emotion_shift(
+        semantic_palette,
+        text,
+        emotion
     )
 
-    emotion = build_emotion_vector(
-        tokens
-    )
+    # Step 4: Palette optimization
+    palette = optimize_palette(palette)
 
-
-    seed = seed_from_text(
-        text
-    )
-
-
-    # -----------------------------
-    # Emotion → HSL
-    # -----------------------------
-
-    base_h = (
-
-        seed % 360
-
-    ) / 360
-
-
-    base_s = (
-
-        0.4 +
-
-        emotion[
-            "saturation"
-        ] * 0.6
-
-    )
-
-
-    base_l = (
-
-        0.35 +
-
-        emotion[
-            "warmth"
-        ] * 0.3 -
-
-        emotion[
-            "darkness"
-        ] * 0.25
-
-    )
-
-
-    base_s = clamp(
-        base_s
-    )
-
-    base_l = clamp(
-        base_l
-    )
-
-
-    palette = []
-
-
-    # -----------------------------
-    # Base generation
-    # -----------------------------
-
-    for i in range(5):
-
-        t = i / 4
-
-
-        h = (
-
-            base_h +
-
-            t * 0.20 +
-
-            emotion[
-                "energy"
-            ] * 0.15
-
-        ) % 1
-
-
-        s = clamp(
-
-            base_s *
-
-            (
-
-                0.7 +
-
-                t * 0.3
-
-            )
-
-        )
-
-
-        l = clamp(
-
-            base_l +
-
-            (
-
-                t - 0.5
-
-            ) * 0.25
-
-        )
-
-
-        r,g,b = colorsys.hls_to_rgb(
-
-            h,
-            l,
-            s
-
-        )
-
-
-        color = (
-
-            f"#{int(r*255):02X}"
-            f"{int(g*255):02X}"
-            f"{int(b*255):02X}"
-
-        )
-
-
-        palette.append(
-            color
-        )
-
-
-    # -----------------------------
-    # Creativity layer
-    # -----------------------------
-
-    if creativity > 0:
-
-        shift = (
-
-            creativity *
-
-            0.12
-
-        )
-
-        palette = [
-
-            shift_color(
-                color,
-                shift
-            )
-
-            for color
-
-            in palette
-
-        ]
-
-
-    # -----------------------------
-    # Palette optimization
-    # -----------------------------
-
-    palette = optimize_palette(
-        palette
-    )
-
-
-    # -----------------------------
-    # Harmony schemes
-    # -----------------------------
-
+    # Step 5: Harmony schemes
     if scheme == "monochromatic":
-
-        palette = monochromatic(
-
-            palette[2]
-
-        )
-
+        palette = monochromatic(palette[2])
 
     elif scheme == "complementary":
-
-        palette = complementary(
-
-            palette[2]
-
-        )
-
+        palette = complementary(palette[2])
 
     elif scheme == "triadic":
+        palette = triadic(palette[2])
 
-        palette = triadic(
-
-            palette[2]
-
-        )
-
-
-    # default ничего не делает
-
+    # Build result with semantic info
+    similar_palettes, scores = find_similar_palettes(text, top_k=1)
+    base_name = similar_palettes[0]["name"] if similar_palettes else "custom"
 
     return [
-
         {
-
             "hex": color,
-
-            "name": "generated"
-
+            "name": base_name if i == 2 else f"{base_name}-{i+1}"
         }
-
-        for color
-
-        in palette
-
+        for i, color in enumerate(palette)
     ]
