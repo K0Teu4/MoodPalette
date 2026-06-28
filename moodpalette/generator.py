@@ -1,212 +1,91 @@
 import hashlib
-import json
-from pathlib import Path
-from palette import (
-    monochromatic,
-    complementary,
-    triadic
-)
+import colorsys
 
-DATA_PATH = Path(
-    "data/palettes.jsonl"
+from emotion import (
+    tokenize,
+    build_emotion_vector
 )
 
 
-def load_palettes():
-
-    palettes=[]
-
-    with open(
-        DATA_PATH,
-        encoding="utf-8"
-    ) as f:
-
-        for line in f:
-
-            palettes.append(
-                json.loads(line)
-            )
-
-    return palettes
+def seed_from_text(text: str):
+    return int(hashlib.md5(text.encode()).hexdigest(), 16)
 
 
-PALETTES=load_palettes()
+def clamp(x, a=0.0, b=1.0):
+    return max(a, min(b, x))
 
 
-TRANSLATIONS={
+def generate_palette(text: str, scheme: str, creativity: float):
 
-    "ночь":"night",
-    "ночной":"night",
+    tokens = tokenize(text)
+    emotion = build_emotion_vector(tokens)
 
-    "лес":"forest",
-    "лесной":"forest",
+    seed = seed_from_text(text)
 
-    "деревья":"forest",
+    # -------------------------
+    # BASE HSL FROM EMOTION
+    # -------------------------
 
-    "осень":"autumn",
-    "осенний":"autumn",
+    base_h = (seed % 360) / 360.0
 
-    "киберпанк":"cyberpunk",
+    base_s = 0.4 + emotion["saturation"] * 0.6
+    base_l = 0.35 + emotion["warmth"] * 0.35 - emotion["darkness"] * 0.3
 
-    "свобода":"freedom",
+    base_s = clamp(base_s)
+    base_l = clamp(base_l)
 
-    "лето":"summer",
-    "летний":"summer",
+    palette = []
 
-    "рассвет":"sunrise",
+    # -------------------------
+    # GENERATION CORE
+    # -------------------------
 
-    "меланхоличный":"melancholy",
+    for i in range(5):
 
-    "вечер":"evening"
-}
+        t = i / 5.0
 
+        h = (base_h + t * 0.22 + emotion["energy"] * 0.08) % 1.0
 
-def normalize(text):
+        s = base_s * (0.7 + t * 0.3)
 
-    words=[]
+        l = base_l + (t - 0.5) * 0.25
 
-    for word in text.lower().split():
+        l = clamp(l)
 
-        words.append(
+        r, g, b = colorsys.hls_to_rgb(h, l, s)
 
-            TRANSLATIONS.get(
-                word,
-                word
-            )
-
+        palette.append(
+            f"#{int(r*255):02X}{int(g*255):02X}{int(b*255):02X}"
         )
 
-    return words
+    # -------------------------
+    # CREATIVITY LAYER
+    # -------------------------
 
+    if creativity > 0:
 
-def similarity(
-    query_words,
-    tags
-):
+        noise = seed % 997
 
-    return len(
+        step = max(1, int(10 - creativity * 8))
 
-        set(query_words)
-        &
-        set(tags)
+        for i in range(len(palette)):
 
-    )
+            if (noise + i * 13) % step == 0:
 
+                h = (base_h + 0.1 * i) % 1.0
 
-def deterministic_index(
-    text,
-    count
-):
+                s = base_s * (0.5 + creativity)
 
-    seed=int(
+                l = base_l + (creativity - 0.5) * 0.2
 
-        hashlib.sha256(
+                r, g, b = colorsys.hls_to_rgb(h, clamp(l), clamp(s))
 
-            text.encode()
-
-        ).hexdigest(),
-
-        16
-
-    )
-
-    return seed % count
-
-
-def generate_palette(
-    text:str,
-    scheme:str,
-    creativity:float
-):
-
-    words=normalize(text)
-
-    scored=[]
-
-    for palette in PALETTES:
-
-        score=similarity(
-
-            words,
-            palette[
-                "tags"
-            ]
-        )
-
-        scored.append({
-
-            "score":score,
-            "palette":palette
-        })
-
-
-    max_score=max(
-
-        x["score"]
-        for x in scored
-
-    )
-
-
-    candidates=[
-
-        x["palette"]
-
-        for x in scored
-
-        if x["score"]
-        ==
-        max_score
-
-    ]
-
-
-    index= deterministic_index(
-        text,
-        len(candidates)
-    )
-
-
-    chosen=candidates[index]
-
-    base_colors=chosen[
-        "colors"
-    ]
-
-
-    if scheme=="monochromatic":
-
-        colors=monochromatic(
-            base_colors[2]
-        )
-
-    elif scheme=="complementary":
-
-        colors=complementary(
-            base_colors[2]
-        )
-
-    elif scheme=="triadic":
-
-        colors=triadic(
-            base_colors[2]
-        )
-
-    else:
-
-        colors=base_colors
-
+                palette[i] = f"#{int(r*255):02X}{int(g*255):02X}{int(b*255):02X}"
 
     return [
-
         {
-
-            "hex":color,
-            "name":
-            chosen["name"]
-
+            "hex": c,
+            "name": "generated"
         }
-
-        for color in colors
-
+        for c in palette
     ]

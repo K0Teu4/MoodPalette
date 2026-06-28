@@ -1,112 +1,80 @@
+from pathlib import Path
 import threading
 import webbrowser
-import uvicorn
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import (
-    FileResponse,
-    StreamingResponse
-)
-
 from pydantic import BaseModel
+import uvicorn
 
-from generator import (
-    generate_palette
-)
+from generator import generate_palette
+from export import export_png
 
-from export import (
-    create_palette_png
-)
+
+ROOT_DIR = Path(__file__).parent.parent
+STATIC_DIR = ROOT_DIR / "static"
 
 
 app = FastAPI()
 
 
-class GenerateRequest(
-    BaseModel
-):
+class GenerateRequest(BaseModel):
 
     text: str
-
     scheme: str = "default"
-
     creativity: float = 0.5
 
 
-app.mount(
-
-    "/static",
-
-    StaticFiles(
-        directory="static"
-    ),
-
-    name="static"
-
-)
-
-
 @app.get("/")
-async def index():
+def home():
 
     return FileResponse(
-        "static/index.html"
+        STATIC_DIR / "index.html"
     )
 
 
-@app.post(
-    "/api/generate"
-)
-async def generate(
-    request: GenerateRequest
-):
+@app.post("/api/generate")
+def generate(req: GenerateRequest):
 
     palette = generate_palette(
-
-        text=request.text,
-
-        scheme=request.scheme,
-
-        creativity=request.creativity
+        req.text,
+        req.scheme,
+        req.creativity
     )
 
     return {
-
         "palette": palette
-
     }
 
 
-@app.get(
-    "/api/export"
+@app.get("/export")
+def export(colors: str):
+
+    color_list = colors.split(",")
+
+    filepath = ROOT_DIR / "palette.png"
+
+    export_png(
+        color_list,
+        filepath
+    )
+
+    return FileResponse(
+        path=filepath,
+        filename="palette.png",
+        media_type="image/png"
+    )
+
+
+app.mount(
+    "/static",
+    StaticFiles(
+        directory=STATIC_DIR
+    ),
+    name="static"
 )
-async def export(
-    colors: str
-):
-
-    parsed = colors.split(
-        ","
-    )
-
-    image = create_palette_png(
-        parsed
-    )
-
-    return StreamingResponse(
-
-        image,
-
-        media_type="image/png",
-
-        headers={
-
-            "Content-Disposition":
-            "attachment; filename=palette.png"
-
-        }
-
-    )
 
 
 def open_browser():
@@ -118,21 +86,13 @@ def open_browser():
 
 def run():
 
-    print(
-        "MoodPalette running at http://localhost:8080"
-    )
-
     threading.Timer(
         1,
         open_browser
     ).start()
 
     uvicorn.run(
-
         app,
-
         host="127.0.0.1",
-
         port=8080
-
     )

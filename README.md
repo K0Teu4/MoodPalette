@@ -2,29 +2,42 @@
 
 Minimal local web application that converts text descriptions into color palettes.
 
-No cloud services. No external APIs. Everything runs locally in Python.
+Everything runs locally.
+
+No cloud services.
+
+No external APIs.
+
+No CDN dependencies.
 
 ---
 
 ## Features
 
 * Text → palette generation
-* Deterministic results
+* Deterministic palette generation
 * Local FastAPI server
-* 5-color palette preview
+* Semantic palette matching
+* Palette harmony engine
+* Monochromatic mode
+* Complementary mode
+* Triadic mode
+* Creativity control slider
+* Palette preview
 * Copy individual HEX values
 * Copy all HEX values
-* Palette history (localStorage)
-* Download palette as PNG (800×200)
+* Palette history (`localStorage`)
+* Download PNG export (800×200)
+* Share links
+* URL state restoration
 * Dark UI
-* No external requests
-* No CDN dependencies
+* No external network requests
 
 ---
 
 ## Preview
 
-Add screenshot:
+Place screenshot here:
 
 ```text
 screenshots/preview.png
@@ -35,12 +48,13 @@ screenshots/preview.png
 ## Project structure
 
 ```text
-moodpalette/
+MoodPalette/
 ├── moodpalette/
 │   ├── __init__.py
 │   ├── __main__.py
 │   ├── server.py
 │   ├── generator.py
+│   ├── palette.py
 │   └── export.py
 │
 ├── static/
@@ -56,7 +70,9 @@ moodpalette/
 │
 ├── requirements.txt
 ├── pyproject.toml
-└── README.md
+├── README.md
+├── LICENSE
+└── .gitignore
 ```
 
 ---
@@ -66,7 +82,7 @@ moodpalette/
 Clone repository:
 
 ```bash
-git clone https://github.com/USERNAME/MoodPalette.git
+git clone https://github.com/K0Teu4/MoodPalette.git
 
 cd MoodPalette
 ```
@@ -89,7 +105,7 @@ Linux/macOS:
 source venv/bin/activate
 ```
 
-Install dependencies:
+Install requirements:
 
 ```bash
 pip install -r requirements.txt
@@ -111,7 +127,7 @@ or:
 moodpalette
 ```
 
-Open:
+Open browser:
 
 ```text
 http://localhost:8080
@@ -119,30 +135,48 @@ http://localhost:8080
 
 ---
 
-## Example inputs
+## Example prompts
 
 ```text
 night
 forest
-melancholic autumn evening
+winter night
 cyberpunk
 summer sunrise
 freedom
+melancholic autumn evening
+```
+
+---
+
+## Current functionality checklist
+
+```text
+[x] Local server
+[x] Text → palette generation
+[x] Semantic palette selection
+[x] Palette harmony engine
+[x] History
+[x] Copy HEX
+[x] Copy all HEX
+[x] Download PNG
+[x] Share links
+[x] URL restoration
+[x] Creativity slider
 ```
 
 ---
 
 ## Planned improvements
 
-* Share links (?q=...)
-* Harmony schemes
-* Creativity slider
 * sentence-transformers integration
-* Larger palette dataset
-* Automated tests
+* larger palette dataset
+* automated tests
+* visual refinements
+* accessibility improvements
 
 ---
 
 ## License
 
-MIT
+MIT License

@@ -1,76 +1,36 @@
-from io import BytesIO
-
 from PIL import Image
 from PIL import ImageDraw
 
 
-def create_palette_png(
-    colors
+def export_png(
+    colors,
+    path="palette.png"
 ):
 
-    width=800
-    height=200
+    width = 800
+    height = 200
 
-    image=Image.new(
+    image = Image.new(
         "RGB",
-        (
-            width,
-            height
-        ),
-        "white"
+        (width, height)
     )
 
-    draw=ImageDraw.Draw(
-        image
-    )
+    draw = ImageDraw.Draw(image)
 
-    block_width=width//len(colors)
+    block_width = width // len(colors)
 
-
-    for i,color in enumerate(colors):
-
-        x1=i*block_width
-
-        x2=(
-            i+1
-        )*block_width
+    for i, color in enumerate(colors):
 
         draw.rectangle(
 
             [
-                x1,
+                i * block_width,
                 0,
-                x2,
-                150
+                (i + 1) * block_width,
+                height
             ],
 
             fill=color
-
         )
 
-        draw.text(
-
-            (
-                x1+20,
-                165
-            ),
-
-            color,
-
-            fill="black"
-
-        )
-
-
-    buffer=BytesIO()
-
-    image.save(
-        buffer,
-        format="PNG"
-    )
-
-    buffer.seek(
-        0
-    )
-
-    return buffer
+    image.save(path)

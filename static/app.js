@@ -43,6 +43,27 @@ document.getElementById(
 "scheme"
 )
 
+const creativity=
+document.getElementById(
+"creativity"
+)
+
+const creativityValue=
+document.getElementById(
+"creativityValue"
+)
+
+
+
+creativity.oninput=()=>{
+
+creativityValue.innerText=
+
+`Creativity: ${creativity.value}`
+
+}
+
+
 
 button.onclick=
 generate
@@ -55,6 +76,7 @@ downloadPNG
 
 share.onclick=
 shareLink
+
 
 
 textarea.addEventListener(
@@ -82,6 +104,7 @@ generate()
 }
 
 )
+
 
 
 loadHistory()
@@ -128,7 +151,11 @@ text:text,
 scheme:
 scheme.value,
 
-creativity:0.5
+creativity:
+
+Number(
+creativity.value
+)
 
 })
 
@@ -269,7 +296,11 @@ localStorage.getItem(
 items=
 
 items.filter(
-x=>x.query!==query
+
+x=>
+
+x.query!==query
+
 )
 
 
@@ -283,6 +314,7 @@ palette:paletteData
 
 
 items=
+
 items.slice(
 0,
 20
@@ -294,7 +326,8 @@ localStorage.setItem(
 "moodpalette.history",
 
 JSON.stringify(
-items)
+items
+)
 
 )
 
@@ -315,7 +348,9 @@ const items=
 JSON.parse(
 
 localStorage.getItem(
+
 "moodpalette.history"
+
 )
 
 ||
@@ -329,14 +364,17 @@ items.forEach(
 
 item=>{
 
+
 const div=
 
 document.createElement(
 "div"
 )
 
+
 div.className=
 "historyItem"
+
 
 div.innerText=
 item.query
@@ -435,25 +473,18 @@ colors
 
 function shareLink(){
 
-const text=
-
-textarea.value.trim()
-
-if(
-!text
-)
-return
-
-
 const params=
 
 new URLSearchParams({
 
-q:text,
+q:
+textarea.value,
 
-s:scheme.value,
+s:
+scheme.value,
 
-c:"0.5"
+c:
+creativity.value
 
 })
 
@@ -491,6 +522,7 @@ window.location.search
 
 )
 
+
 const query=
 
 params.get(
@@ -501,6 +533,12 @@ const urlScheme=
 
 params.get(
 "s"
+)
+
+const urlCreativity=
+
+params.get(
+"c"
 )
 
 
@@ -524,6 +562,20 @@ urlScheme
 }
 
 
+if(
+urlCreativity
+){
+
+creativity.value=
+urlCreativity
+
+creativityValue.innerText=
+
+`Creativity: ${urlCreativity}`
+
+}
+
+
 generate()
 
 }
@@ -537,9 +589,11 @@ message
 toast.innerText=
 message
 
+
 toast.classList.add(
 "show"
 )
+
 
 setTimeout(
 
@@ -550,6 +604,7 @@ toast.classList.remove(
 )
 
 },
+
 1000
 
 )

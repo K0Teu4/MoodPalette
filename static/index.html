@@ -1,123 +1,171 @@
 <!DOCTYPE html>
-
 <html lang="ru">
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta
-name="viewport"
-content="width=device-width,initial-scale=1"
->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<title>MoodPalette</title>
+    <title>MoodPalette</title>
 
-<link
-rel="stylesheet"
-href="/static/style.css"
->
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
 
 </head>
 
 <body>
 
-<div class="container">
+    <main class="container">
 
-<h1>
-MoodPalette
-</h1>
+        <h1>MoodPalette</h1>
+
+        <div class="input-container">
+
+            <textarea
+                id="prompt"
+                placeholder="меланхоличный осенний вечер"
+            ></textarea>
+
+            <button id="generate">
+
+                Сгенерировать
+
+            </button>
+
+        </div>
+
+        <details class="settings">
+
+            <summary>
+
+                Настройки
+
+            </summary>
+
+            <div class="setting-row">
+
+                <label>
+
+                    Схема
+
+                </label>
+
+                <select id="scheme">
+
+                    <option value="default">
+
+                        Default
+
+                    </option>
+
+                    <option value="monochromatic">
+
+                        Monochromatic
+
+                    </option>
+
+                    <option value="complementary">
+
+                        Complementary
+
+                    </option>
+
+                    <option value="triadic">
+
+                        Triadic
+
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="setting-row">
+
+                <label>
+
+                    Creativity
+
+                </label>
+
+                <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value="0.5"
+                    id="creativity"
+                >
+
+                <span id="creativity-value">
+
+                    0.5
+
+                </span>
+
+            </div>
+
+        </details>
 
 
-<textarea
-id="prompt"
-placeholder="меланхоличный осенний вечер"
-></textarea>
+        <div
+            id="palette"
+            class="palette"
+        ></div>
 
 
-<div class="controls">
+        <div class="actions">
 
-<select
-id="scheme"
->
+            <button id="copy-all">
 
-<option value="default">
-Default
-</option>
+                Copy all HEX
 
-<option value="monochromatic">
-Monochromatic
-</option>
+            </button>
 
-<option value="complementary">
-Complementary
-</option>
+            <button id="download">
 
-<option value="triadic">
-Triadic
-</option>
+                Download PNG
 
-</select>
+            </button>
+
+        </div>
 
 
-<button
-id="generate"
->
-Сгенерировать
-</button>
+        <section class="history-section">
+
+            <h2>
+
+                History
+
+            </h2>
+
+            <div
+                id="history"
+                class="history"
+            ></div>
+
+        </section>
 
 
-<button
-id="copyAll"
->
-Copy all HEX
-</button>
+        <div
+            id="toast"
+            class="toast"
+        >
+
+            Copied
+
+        </div>
+
+    </main>
 
 
-<button
-id="download"
->
-Download PNG
-</button>
-
-
-<button
-id="share"
->
-Share Link
-</button>
-
-</div>
-
-
-<div
-id="palette"
-class="palette"
-></div>
-
-
-<div
-id="toast"
-class="toast"
-></div>
-
-
-<h3>
-История
-</h3>
-
-
-<div
-id="history"
-class="history"
-></div>
-
-
-</div>
-
-<script
-src="/static/app.js"
-></script>
+    <script src="/static/app.js"></script>
 
 </body>
 
