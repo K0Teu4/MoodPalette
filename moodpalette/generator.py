@@ -6,86 +6,325 @@ from emotion import (
     build_emotion_vector
 )
 
+from palette import (
+    optimize_palette,
+    monochromatic,
+    complementary,
+    triadic
+)
 
-def seed_from_text(text: str):
-    return int(hashlib.md5(text.encode()).hexdigest(), 16)
+
+def seed_from_text(text):
+
+    return int(
+
+        hashlib.md5(
+
+            text.encode()
+
+        ).hexdigest(),
+
+        16
+    )
 
 
-def clamp(x, a=0.0, b=1.0):
-    return max(a, min(b, x))
+def clamp(
+    x,
+    a=0.0,
+    b=1.0
+):
+
+    return max(
+        a,
+        min(
+            b,
+            x
+        )
+    )
 
 
-def generate_palette(text: str, scheme: str, creativity: float):
+def shift_color(
+    hex_color,
+    shift
+):
 
-    tokens = tokenize(text)
-    emotion = build_emotion_vector(tokens)
+    hex_color = hex_color.lstrip("#")
 
-    seed = seed_from_text(text)
+    r = int(
+        hex_color[0:2],
+        16
+    )
 
-    # -------------------------
-    # BASE HSL FROM EMOTION
-    # -------------------------
+    g = int(
+        hex_color[2:4],
+        16
+    )
 
-    base_h = (seed % 360) / 360.0
+    b = int(
+        hex_color[4:6],
+        16
+    )
 
-    base_s = 0.4 + emotion["saturation"] * 0.6
-    base_l = 0.35 + emotion["warmth"] * 0.35 - emotion["darkness"] * 0.3
+    h,l,s = colorsys.rgb_to_hls(
 
-    base_s = clamp(base_s)
-    base_l = clamp(base_l)
+        r/255,
+        g/255,
+        b/255
+
+    )
+
+    h = (
+
+        h +
+
+        shift
+
+    ) % 1
+
+    r,g,b = colorsys.hls_to_rgb(
+
+        h,
+        l,
+        s
+
+    )
+
+    return (
+
+        f"#{int(r*255):02X}"
+        f"{int(g*255):02X}"
+        f"{int(b*255):02X}"
+
+    )
+
+
+def generate_palette(
+
+    text,
+    scheme,
+    creativity
+
+):
+
+    tokens = tokenize(
+        text
+    )
+
+    emotion = build_emotion_vector(
+        tokens
+    )
+
+
+    seed = seed_from_text(
+        text
+    )
+
+
+    # -----------------------------
+    # Emotion → HSL
+    # -----------------------------
+
+    base_h = (
+
+        seed % 360
+
+    ) / 360
+
+
+    base_s = (
+
+        0.4 +
+
+        emotion[
+            "saturation"
+        ] * 0.6
+
+    )
+
+
+    base_l = (
+
+        0.35 +
+
+        emotion[
+            "warmth"
+        ] * 0.3 -
+
+        emotion[
+            "darkness"
+        ] * 0.25
+
+    )
+
+
+    base_s = clamp(
+        base_s
+    )
+
+    base_l = clamp(
+        base_l
+    )
+
 
     palette = []
 
-    # -------------------------
-    # GENERATION CORE
-    # -------------------------
+
+    # -----------------------------
+    # Base generation
+    # -----------------------------
 
     for i in range(5):
 
-        t = i / 5.0
+        t = i / 4
 
-        h = (base_h + t * 0.22 + emotion["energy"] * 0.08) % 1.0
 
-        s = base_s * (0.7 + t * 0.3)
+        h = (
 
-        l = base_l + (t - 0.5) * 0.25
+            base_h +
 
-        l = clamp(l)
+            t * 0.20 +
 
-        r, g, b = colorsys.hls_to_rgb(h, l, s)
+            emotion[
+                "energy"
+            ] * 0.15
 
-        palette.append(
-            f"#{int(r*255):02X}{int(g*255):02X}{int(b*255):02X}"
+        ) % 1
+
+
+        s = clamp(
+
+            base_s *
+
+            (
+
+                0.7 +
+
+                t * 0.3
+
+            )
+
         )
 
-    # -------------------------
-    # CREATIVITY LAYER
-    # -------------------------
+
+        l = clamp(
+
+            base_l +
+
+            (
+
+                t - 0.5
+
+            ) * 0.25
+
+        )
+
+
+        r,g,b = colorsys.hls_to_rgb(
+
+            h,
+            l,
+            s
+
+        )
+
+
+        color = (
+
+            f"#{int(r*255):02X}"
+            f"{int(g*255):02X}"
+            f"{int(b*255):02X}"
+
+        )
+
+
+        palette.append(
+            color
+        )
+
+
+    # -----------------------------
+    # Creativity layer
+    # -----------------------------
 
     if creativity > 0:
 
-        noise = seed % 997
+        shift = (
 
-        step = max(1, int(10 - creativity * 8))
+            creativity *
 
-        for i in range(len(palette)):
+            0.12
 
-            if (noise + i * 13) % step == 0:
+        )
 
-                h = (base_h + 0.1 * i) % 1.0
+        palette = [
 
-                s = base_s * (0.5 + creativity)
+            shift_color(
+                color,
+                shift
+            )
 
-                l = base_l + (creativity - 0.5) * 0.2
+            for color
 
-                r, g, b = colorsys.hls_to_rgb(h, clamp(l), clamp(s))
+            in palette
 
-                palette[i] = f"#{int(r*255):02X}{int(g*255):02X}{int(b*255):02X}"
+        ]
+
+
+    # -----------------------------
+    # Palette optimization
+    # -----------------------------
+
+    palette = optimize_palette(
+        palette
+    )
+
+
+    # -----------------------------
+    # Harmony schemes
+    # -----------------------------
+
+    if scheme == "monochromatic":
+
+        palette = monochromatic(
+
+            palette[2]
+
+        )
+
+
+    elif scheme == "complementary":
+
+        palette = complementary(
+
+            palette[2]
+
+        )
+
+
+    elif scheme == "triadic":
+
+        palette = triadic(
+
+            palette[2]
+
+        )
+
+
+    # default ничего не делает
+
 
     return [
+
         {
-            "hex": c,
+
+            "hex": color,
+
             "name": "generated"
+
         }
-        for c in palette
+
+        for color
+
+        in palette
+
     ]

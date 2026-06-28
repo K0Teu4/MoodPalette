@@ -1,69 +1,46 @@
 import colorsys
 
 
-def hex_to_rgb(
-    color: str
-):
+def clamp(x,a=0,b=1):
 
-    color = color.lstrip(
-        "#"
-    )
-
-    return (
-
-        int(
-            color[0:2],
-            16
-        ),
-
-        int(
-            color[2:4],
-            16
-        ),
-
-        int(
-            color[4:6],
-            16
+    return max(
+        a,
+        min(
+            b,
+            x
         )
+    )
+
+
+def hex_to_rgb(color):
+
+    color=color.lstrip("#")
+
+    return (
+
+        int(color[0:2],16),
+        int(color[2:4],16),
+        int(color[4:6],16)
 
     )
 
 
-def rgb_to_hex(
-    r,
-    g,
-    b
-):
+def rgb_to_hex(r,g,b):
 
     return (
+
         f"#{r:02X}"
         f"{g:02X}"
         f"{b:02X}"
+
     )
 
 
-def clamp(
-    value
-):
+def monochromatic(base):
 
-    return max(
-        0,
-        min(
-            255,
-            int(value)
-        )
-    )
+    r,g,b=hex_to_rgb(base)
 
-
-def monochromatic(
-    color
-):
-
-    r,g,b = hex_to_rgb(
-        color
-    )
-
-    h,l,s = colorsys.rgb_to_hls(
+    h,l,s=colorsys.rgb_to_hls(
 
         r/255,
         g/255,
@@ -71,106 +48,31 @@ def monochromatic(
 
     )
 
-    palette=[]
+    result=[]
 
-    values=[
+    for i in range(5):
 
-        0.25,
-        0.40,
-        0.55,
-        0.70,
-        0.85
+        nl=clamp(
 
-    ]
+            l+(i-2)*0.12
 
-    for lightness in values:
+        )
 
         nr,ng,nb=colorsys.hls_to_rgb(
 
             h,
-            lightness,
+            nl,
             s
 
-        )
-
-        palette.append(
-
-            rgb_to_hex(
-
-                clamp(
-                    nr*255
-                ),
-
-                clamp(
-                    ng*255
-                ),
-
-                clamp(
-                    nb*255
-                )
-
-            )
-
-        )
-
-    return palette
-
-
-def complementary(
-    color
-):
-
-    r,g,b=hex_to_rgb(
-        color
-    )
-
-    h,l,s=colorsys.rgb_to_hls(
-
-        r/255,
-        g/255,
-        b/255
-    )
-
-    complement=(h+0.5)%1
-
-
-    result=[]
-
-    values=[
-
-        h,
-        h,
-        complement,
-        complement,
-        h
-
-    ]
-
-
-    for hue in values:
-
-        nr,ng,nb=colorsys.hls_to_rgb(
-
-            hue,
-            l,
-            s
         )
 
         result.append(
 
             rgb_to_hex(
 
-                clamp(
-                    nr*255
-                ),
-
-                clamp(
-                    ng*255
-                ),
-
-                clamp(
-                    nb*255
-                )
+                int(nr*255),
+                int(ng*255),
+                int(nb*255)
 
             )
 
@@ -179,64 +81,155 @@ def complementary(
     return result
 
 
-def triadic(
-    color
-):
+def complementary(base):
 
-    r,g,b=hex_to_rgb(
-        color
-    )
+    r,g,b=hex_to_rgb(base)
 
     h,l,s=colorsys.rgb_to_hls(
 
         r/255,
         g/255,
         b/255
+
     )
-
-    hues=[
-
-        h,
-
-        (h+0.33)%1,
-
-        (h+0.66)%1,
-
-        h,
-
-        (h+0.33)%1
-
-    ]
 
     result=[]
 
-    for hue in hues:
+    for i in range(5):
+
+        nh=(
+
+            h
+            if i<3
+            else (h+0.5)%1
+
+        )
 
         nr,ng,nb=colorsys.hls_to_rgb(
 
-            hue,
+            nh,
             l,
             s
+
         )
 
         result.append(
 
             rgb_to_hex(
 
-                clamp(
-                    nr*255
-                ),
-
-                clamp(
-                    ng*255
-                ),
-
-                clamp(
-                    nb*255
-                )
+                int(nr*255),
+                int(ng*255),
+                int(nb*255)
 
             )
 
         )
 
     return result
+
+
+def triadic(base):
+
+    r,g,b=hex_to_rgb(base)
+
+    h,l,s=colorsys.rgb_to_hls(
+
+        r/255,
+        g/255,
+        b/255
+
+    )
+
+    shifts=[
+
+        0,
+        0.33,
+        0.66,
+        0,
+        0.33
+
+    ]
+
+    result=[]
+
+    for shift in shifts:
+
+        nr,ng,nb=colorsys.hls_to_rgb(
+
+            (h+shift)%1,
+            l,
+            s
+
+        )
+
+        result.append(
+
+            rgb_to_hex(
+
+                int(nr*255),
+                int(ng*255),
+                int(nb*255)
+
+            )
+
+        )
+
+    return result
+
+
+def color_distance(c1,c2):
+
+    r1,g1,b1=hex_to_rgb(c1)
+
+    r2,g2,b2=hex_to_rgb(c2)
+
+    return (
+
+        ((r1-r2)**2)+
+        ((g1-g2)**2)+
+        ((b1-b2)**2)
+
+    )**0.5
+
+
+def optimize_palette(colors):
+
+    result=[]
+
+    threshold=35
+
+    for color in colors:
+
+        keep=True
+
+        for existing in result:
+
+            if (
+
+                color_distance(
+                    color,
+                    existing
+                )
+
+                <threshold
+
+            ):
+
+                keep=False
+                break
+
+        if keep:
+
+            result.append(
+                color
+            )
+
+    while len(result)<5:
+
+        result.append(
+
+            result[-1]
+
+        )
+
+    return result[:5]
